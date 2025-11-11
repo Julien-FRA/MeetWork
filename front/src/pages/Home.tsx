@@ -30,7 +30,7 @@ export default function Home() {
             color: theme.palette.extraColors.white.main,
           }}
           component={Link}
-          to="/user"
+          to="/login"
         >
           Se connecter
         </Button>
