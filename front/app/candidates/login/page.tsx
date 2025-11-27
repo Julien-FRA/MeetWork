@@ -1,4 +1,4 @@
-import LoginForm from "@/components/forms/LoginForm";
+import LoginForm from "@/app/candidates/login/components/LoginForm";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 

@@ -13,11 +13,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { registerSchema } from "@/lib/validations/register.schema";
+import { registerCandidateSchema } from "@/lib/validations/register.schema";
+import { redirect } from "next/navigation";
 
 export default function RegisterForm() {
   const form = useForm({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(registerCandidateSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -27,8 +28,11 @@ export default function RegisterForm() {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof registerSchema>) => {
+  const onSubmit = (data: z.infer<typeof registerCandidateSchema>) => {
     console.log("Form Data:", data);
+    setTimeout(() => {
+      redirect("/recruiters/login");
+    }, 2000);
   };
 
   return (
@@ -39,23 +43,23 @@ export default function RegisterForm() {
           name="firstName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Prénom</FormLabel>
+              <FormLabel>Nom</FormLabel>
               <FormControl>
-                <Input placeholder="Votre prénom" {...field} />
+                <Input placeholder="Votre nom" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <FormField
+                <FormField
           control={form.control}
           name="lastName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nom</FormLabel>
+              <FormLabel>Prénom</FormLabel>
               <FormControl>
-                <Input placeholder="Votre nom" {...field} />
+                <Input placeholder="Votre prénom" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

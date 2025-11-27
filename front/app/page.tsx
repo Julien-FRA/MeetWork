@@ -14,10 +14,10 @@ export default function Home() {
       </p>
       <div>
         <Button variant="default" className="mt-6">
-          <Link href="/candidates/register">Espace candidat</Link>
+          <Link href="/candidates/login">Espace candidat</Link>
         </Button>
         <Button variant="outline" className="mt-6 ml-4">
-          <Link href="/recruiters/register">Espace entreprise</Link>
+          <Link href="/recruiters/login">Espace entreprise</Link>
         </Button>
       </div>
     </main>
