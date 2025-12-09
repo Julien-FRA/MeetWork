@@ -8,6 +8,6 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/CandidateUser.js'
-export type * from './models/RecruiterUser.js'
-export type * from './commonInputTypes.js'
+export type * from './models/CandidateUser'
+export type * from './models/RecruiterUser'
+export type * from './commonInputTypes'
