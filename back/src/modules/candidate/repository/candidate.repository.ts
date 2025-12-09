@@ -25,4 +25,14 @@ export class CandidateRepository {
       where: { email },
     });
   }
+
+  async findById(id: string) {
+    return this.prisma.candidateUser.findUnique({
+      where: { id },
+    });
+  }
+
+  async findAll() {
+    return this.prisma.candidateUser.findMany();
+  }
 }
