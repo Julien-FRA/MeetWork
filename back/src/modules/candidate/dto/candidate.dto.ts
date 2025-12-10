@@ -1,13 +1,53 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsString, MaxLength, MinLength } from 'class-validator';
 
-export type CreateCandidateDto = {
+export class CreateCandidateDto {
+  @ApiProperty({ description: 'Prénom du candidat', example: 'John' })
+  @IsString({ message: 'Votre nom doit être une chaine de caractère.' })
+  @MinLength(3, { message: 'Votre nom doit faire au moins 3 caractères.' })
+  @MaxLength(20, { message: 'Votre nom doit faire au maximum 20 caractères.' })
   firstName: string;
+
+  @ApiProperty({ description: 'Nom du candidat', example: 'Doe' })
+  @IsString({ message: 'Votre prénom doit être une chaine de caractère.' })
+  @MinLength(3, { message: 'Votre prénom doit faire au moins 3 caractères.' })
+  @MaxLength(20, {
+    message: 'Votre prénom doit faire au maximum 20 caractères.',
+  })
   lastName: string;
+
+  @ApiProperty({
+    description: 'Email du candidat',
+    example: 'john.doe@example.com',
+  })
+  @IsEmail({}, { message: "L'email doit être une adresse email valide." })
   email: string;
+
+  @ApiProperty({
+    description: 'Mot de passe',
+    example: 'password123',
+    minLength: 3,
+  })
+  @IsString({
+    message: 'Votre mot de passe doit être une chaine de caractère.',
+  })
+  @MinLength(3, {
+    message: 'Votre mot de passe doit faire au moins 3 caractères.',
+  })
+  @MaxLength(50, {
+    message: 'Votre mot de passe doit faire au maximum 50 caractères.',
+  })
   password: string;
+
+  @ApiProperty({
+    description: 'Téléphone du candidat',
+    example: '+33612345678',
+    required: false,
+  })
   phone?: string | null;
-};
+}
+
 export class CandidateResponseDto {
   @ApiProperty({ description: 'ID du candidat', example: '1' })
   id: string;
