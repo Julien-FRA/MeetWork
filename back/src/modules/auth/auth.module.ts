@@ -4,6 +4,7 @@ import { RecruiterModule } from '../recruiter/recruiter.module';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthController } from './auth.controller';
 
 @Module({
   imports: [
@@ -15,7 +16,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       useFactory: (config: ConfigService) => ({
         secret: config.get('JWT_SECRET'),
         signOptions: {
-          expiresIn: config.get<string>('JWT_EXPIRES_IN') ?? '1d',
+          expiresIn: config.get<string>('JWT_EXPIRES_IN')
+            ? config.get('JWT_EXPIRES_IN')
+            : '1d',
         },
       }),
     }),

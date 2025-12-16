@@ -6,6 +6,7 @@ import { PrismaModule } from './modules/prisma/prisma.module';
 import { RecruiterModule } from './modules/recruiter/recruiter.module';
 import { ConfigModule } from '@nestjs/config/dist/config.module';
 import { validate } from './config/env.validation';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { validate } from './config/env.validation';
       validate,
     }),
     PrismaModule,
+    AuthModule,
     CandidateModule,
     RecruiterModule,
   ],
