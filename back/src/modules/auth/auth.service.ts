@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CandidateService } from '../candidate/services/candidate.service';
 import { RecruiterService } from '../recruiter/services/recruiter.service';
 import { JwtService } from '@nestjs/jwt';
@@ -14,9 +14,16 @@ import {
 } from '../recruiter/dto/recruiter.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtPayload } from 'src/types/jwt.type';
+import {
+  ConflictException,
+  UnauthorizedException,
+  NotFoundException,
+} from 'src/common/exceptions/custom.exception';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly candidateService: CandidateService,
     private readonly recruiterService: RecruiterService,
@@ -24,11 +31,19 @@ export class AuthService {
   ) {}
 
   async signupCandidate(createCandidateDto: CreateCandidateDto) {
-    const existingCandidate = await this.candidateService.findByEmail(
-      createCandidateDto.email,
-    );
-    if (existingCandidate) {
-      throw new UnauthorizedException('Email déjà utilisé');
+    try {
+      // Check if email already exists - this will throw NotFoundException if not found
+      const existingCandidate = await this.candidateService.findByEmail(
+        createCandidateDto.email,
+      );
+      if (existingCandidate) {
+        throw new ConflictException('Email déjà utilisé');
+      }
+    } catch (error) {
+      // If NotFoundException, it means email doesn't exist - proceed with signup
+      if (!(error instanceof NotFoundException)) {
+        throw error;
+      }
     }
 
     const candidate =
@@ -37,11 +52,19 @@ export class AuthService {
   }
 
   async signupRecruiter(createRecruiterDto: CreateRecruiterDto) {
-    const existingRecruiter = await this.recruiterService.findByEmail(
-      createRecruiterDto.email,
-    );
-    if (existingRecruiter) {
-      throw new UnauthorizedException('Email déjà utilisé');
+    try {
+      // Check if email already exists - this will throw NotFoundException if not found
+      const existingRecruiter = await this.recruiterService.findByEmail(
+        createRecruiterDto.email,
+      );
+      if (existingRecruiter) {
+        throw new ConflictException('Email déjà utilisé');
+      }
+    } catch (error) {
+      // If NotFoundException, it means email doesn't exist - proceed with signup
+      if (!(error instanceof NotFoundException)) {
+        throw error;
+      }
     }
 
     const recruiter =
@@ -50,39 +73,66 @@ export class AuthService {
   }
 
   async loginCandidate(loginCandidateDto: LoginCandidateDto) {
-    const candidate = await this.candidateService.findByEmail(
-      loginCandidateDto.email,
-    );
-    if (
-      !candidate ||
-      !(await bcrypt.compare(loginCandidateDto.password, candidate.password))
-    ) {
-      throw new UnauthorizedException('Email ou mot de passe incorrect');
+    try {
+      const candidate = await this.candidateService.findByEmail(
+        loginCandidateDto.email,
+      );
+
+      const isPasswordValid = await bcrypt.compare(
+        loginCandidateDto.password,
+        candidate.password,
+      );
+
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Email ou mot de passe incorrect');
+      }
+
+      return this.generateToken(new CandidateResponseDto(candidate));
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new UnauthorizedException('Email ou mot de passe incorrect');
+      }
+      throw error;
     }
-    return this.generateToken(candidate);
   }
 
   async loginRecruiter(loginRecruiterDto: LoginRecruiterDto) {
-    const recruiter = await this.recruiterService.findByEmail(
-      loginRecruiterDto.email,
-    );
-    if (
-      !recruiter ||
-      !(await bcrypt.compare(loginRecruiterDto.password, recruiter.password))
-    ) {
-      throw new UnauthorizedException('Email ou mot de passe incorrect');
+    try {
+      const recruiter = await this.recruiterService.findByEmail(
+        loginRecruiterDto.email,
+      );
+
+      const isPasswordValid = await bcrypt.compare(
+        loginRecruiterDto.password,
+        recruiter.password,
+      );
+
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Email ou mot de passe incorrect');
+      }
+
+      return this.generateToken(new RecruiterResponseDto(recruiter));
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new UnauthorizedException('Email ou mot de passe incorrect');
+      }
+      throw error;
     }
-    return this.generateToken(recruiter);
   }
 
   private generateToken(user: CandidateResponseDto | RecruiterResponseDto) {
-    const payload: JwtPayload = {
-      sub: user.id,
-      email: user.email,
-    };
-    return {
-      access_token: this.jwtService.sign(payload),
-      user,
-    };
+    try {
+      const payload: JwtPayload = {
+        sub: user.id,
+        email: user.email,
+      };
+      return {
+        access_token: this.jwtService.sign(payload),
+        user,
+      };
+    } catch (error) {
+      this.logger.error(`Error generating JWT token: ${error.message}`);
+      throw new Error('Erreur lors de la génération du token');
+    }
   }
 }

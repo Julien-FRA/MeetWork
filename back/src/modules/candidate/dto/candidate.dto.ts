@@ -106,11 +106,14 @@ export class LoginCandidateDto {
     description: 'Email du candidat',
     example: 'john.doe@example.com',
   })
+  @IsEmail({}, { message: "L'email doit être une adresse email valide." })
   email: string;
 
   @ApiProperty({
     description: 'Mot de passe',
     example: 'password123',
   })
+  @IsString({ message: 'Le mot de passe doit être une chaine de caractère.' })
+  @MinLength(3, { message: 'Le mot de passe doit faire au moins 3 caractères.' })
   password: string;
 }

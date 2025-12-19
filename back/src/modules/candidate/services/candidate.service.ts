@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { CandidateRepository } from '../repository/candidate.repository';
 import { CandidateResponseDto, CreateCandidateDto } from '../dto/candidate.dto';
+import {
+  NotFoundException,
+  BadRequestException,
+} from 'src/common/exceptions/custom.exception';
+import { validateUUID, validateEmail } from 'src/common/validators/id.validator';
 
 @Injectable()
 export class CandidateService {
@@ -9,18 +14,38 @@ export class CandidateService {
   async createCandidate(
     createCandidateDto: CreateCandidateDto,
   ): Promise<CandidateResponseDto> {
+    // Validate email format
+    validateEmail(createCandidateDto.email);
+
     const candidate =
       await this.candidateRepository.createCandidate(createCandidateDto);
     return new CandidateResponseDto(candidate);
   }
 
   async findByEmail(email: string) {
-    return this.candidateRepository.findByEmail(email);
+    // Validate email format
+    validateEmail(email);
+
+    const candidate = await this.candidateRepository.findByEmail(email);
+
+    if (!candidate) {
+      throw new NotFoundException('Candidat', email);
+    }
+
+    return candidate;
   }
 
-  async findById(id: string): Promise<CandidateResponseDto | null> {
+  async findById(id: string): Promise<CandidateResponseDto> {
+    // Validate UUID format
+    validateUUID(id, 'ID du candidat');
+
     const candidate = await this.candidateRepository.findById(id);
-    return candidate ? new CandidateResponseDto(candidate) : null;
+
+    if (!candidate) {
+      throw new NotFoundException('Candidat', id);
+    }
+
+    return new CandidateResponseDto(candidate);
   }
 
   async findAll(): Promise<CandidateResponseDto[]> {

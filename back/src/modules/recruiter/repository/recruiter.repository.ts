@@ -1,38 +1,91 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateRecruiterDto } from '../dto/recruiter.dto';
 import * as bcrypt from 'bcrypt';
+import { ConflictException } from 'src/common/exceptions/custom.exception';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class RecruiterRepository {
+  private readonly logger = new Logger(RecruiterRepository.name);
+
   constructor(private readonly prismaService: PrismaService) {}
 
   async createRecruiter(createRecruiterDto: CreateRecruiterDto) {
-    const hashedPassword = await bcrypt.hash(createRecruiterDto.password, 12);
-    return this.prismaService.recruiterUser.create({
-      data: {
-        enterprise: createRecruiterDto.enterprise,
-        name: createRecruiterDto.name,
-        email: createRecruiterDto.email,
-        password: hashedPassword,
-        phone: createRecruiterDto.phone,
-      },
-    });
+    try {
+      const hashedPassword = await bcrypt.hash(
+        createRecruiterDto.password,
+        12,
+      );
+      return await this.prismaService.recruiterUser.create({
+        data: {
+          enterprise: createRecruiterDto.enterprise,
+          name: createRecruiterDto.name,
+          email: createRecruiterDto.email,
+          password: hashedPassword,
+          phone: createRecruiterDto.phone,
+        },
+      });
+    } catch (error) {
+      this.logger.error(
+        `Error creating recruiter: ${error.message}`,
+        error.stack,
+      );
+
+      // Handle Prisma unique constraint violation
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException('Email déjà utilisé');
+      }
+
+      // Handle bcrypt errors
+      if (error.name === 'Error' && error.message.includes('bcrypt')) {
+        throw new Error('Erreur lors du hachage du mot de passe');
+      }
+
+      throw error;
+    }
   }
 
   async findByEmail(email: string) {
-    return this.prismaService.recruiterUser.findUnique({
-      where: { email },
-    });
+    try {
+      return await this.prismaService.recruiterUser.findUnique({
+        where: { email },
+      });
+    } catch (error) {
+      this.logger.error(
+        `Error finding recruiter by email: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
   }
 
   async findById(id: string) {
-    return this.prismaService.recruiterUser.findUnique({
-      where: { id },
-    });
+    try {
+      return await this.prismaService.recruiterUser.findUnique({
+        where: { id },
+      });
+    } catch (error) {
+      this.logger.error(
+        `Error finding recruiter by ID: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
   }
 
   async findAll() {
-    return this.prismaService.recruiterUser.findMany();
+    try {
+      return await this.prismaService.recruiterUser.findMany();
+    } catch (error) {
+      this.logger.error(
+        `Error finding all recruiters: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
   }
 }
